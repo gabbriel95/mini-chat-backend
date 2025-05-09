@@ -12,12 +12,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly prisma: PrismaService,
     configService: ConfigService,
   ) {
-    const secret = configService.get<string>('JWT_SECRET');
-    if (!secret) {
-      throw new Error('El secreto JWT no está configurado');
-    }
+    const jwtSecret = configService.get('JWT_SECRET') as string;
+    console.log('JWT_SECRET:', jwtSecret); // 👈🏽 Agregá esto
+
     super({
-      secretOrKey: secret,
+      secretOrKey:
+        configService.get('JWT_SECRET') ?? 'clave-secreta-predeterminada',
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     });
   }
