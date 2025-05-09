@@ -8,9 +8,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { ROLES, User } from '@prisma/client';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { ValidRoles } from './interfaces/valid-roles';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +29,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         ...data,
-        roles: data.roles || [ValidRoles.user],
+        roles: data.roles || [ROLES.USER],
         isActive: data.isActive ?? true,
         password: bcrypt.hashSync(data.password, 10),
         fullName: `${data.name} ${data.lastName}`,

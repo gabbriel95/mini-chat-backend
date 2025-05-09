@@ -9,7 +9,6 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { META_ROLES } from '../decorators/role-protected.decorator';
-import { ValidRoles } from '../interfaces/valid-roles';
 import { CustomRequest } from '../interfaces/custom-request.interfaces';
 
 @Injectable()
@@ -34,7 +33,7 @@ export class UserRoleGuard implements CanActivate {
     }
 
     for (const role of user.roles) {
-      if (validRoles.includes(role as ValidRoles)) {
+      if (validRoles.includes(role)) {
         return true;
       }
     }

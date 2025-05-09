@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum ROLES {
+  ADMIN
+  SUPERUSER
+  USER
+}
+
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
@@ -16,6 +23,35 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
-  roles     String[]  @default([])
+  roles     ROLES[]  @default([USER])
   isActive  Boolean @default(true)
+
+  friendsInitiated Friendship[] @relation("User1Friends")
+  friendsReceived  Friendship[] @relation("User2Friends")
 }
+
+enum FRIENDSHIPSTATUS {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+
+model Friendship{
+  id  String  @id @default(uuid())
+  userId1  String
+  userId2  String
+  status  FRIENDSHIPSTATUS //'pending','accepted','blocked'
+  blockedBy String? //Id del usuario que bloqueo(null si no esta bloqueado)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  user1 User @relation("User1Friends", fields: [userId1], references: [id])
+  user2 User @relation("User2Friends", fields: [userId2], references: [id])
+
+  @@unique([userId1, userId2])
+  @@index([userId1, userId2])
+  @@index([userId2, userId1])
+
+}
+

@@ -8,7 +8,8 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { ValidRoles } from '../interfaces/valid-roles';
+import { ValidRoles } from '../enum/valid-roles';
+import { ROLES } from '@prisma/client';
 
 export class CreateUserDto {
   @IsString()
@@ -37,7 +38,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsEnum(ValidRoles, { each: true })
-  roles?: ValidRoles[];
+  roles?: ROLES[];
 
   @IsOptional()
   isActive?: boolean;

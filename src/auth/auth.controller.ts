@@ -2,10 +2,10 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
-import { ValidRoles } from './interfaces/valid-roles';
 import { RoleProtected } from './decorators/role-protected.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { UserRoleGuard } from './guards/roles.guard';
+import { ROLES } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +22,7 @@ export class AuthController {
   }
 
   @Get()
-  @RoleProtected(ValidRoles.admin)
+  @RoleProtected(ROLES.ADMIN)
   @UseGuards(AuthGuard(), UserRoleGuard)
   async getUsers() {
     return this.authService.getUsers();
