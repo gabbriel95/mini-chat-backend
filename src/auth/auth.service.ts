@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +10,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { ValidRoles } from './interfaces/valid-roles';
 
 @Injectable()
 export class AuthService {
@@ -15,13 +20,24 @@ export class AuthService {
   ) {}
 
   async createUser(data: CreateUserDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (existingUser) {
+      throw new BadRequestException('Email is already registered');
+    }
+
     const user = await this.prisma.user.create({
       data: {
         ...data,
+        roles: data.roles || [ValidRoles.user],
+        isActive: data.isActive ?? true,
         password: bcrypt.hashSync(data.password, 10),
+        fullName: `${data.name} ${data.lastName}`,
       },
     });
-    const { password, ...result } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = user;
     return result;
   }
 
@@ -43,6 +59,7 @@ export class AuthService {
 
     const token = this.getJwtToken({ id: user.id });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
 
     return { ...result, access_token: token };
