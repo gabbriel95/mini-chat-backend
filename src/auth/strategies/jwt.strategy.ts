@@ -29,11 +29,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Toker not valid');
     }
 
-    /*if (!user.isActive) {
+    if (!user.isActive) {
       throw new UnauthorizedException('User is inactive, tal with an admin');
-    }*/
-
-    //const { password, ...rest } = user;
+    }
 
     return user;
   }
