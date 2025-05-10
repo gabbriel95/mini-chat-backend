@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation';
 import { FriendshipsModule } from './friendships/friendships.module';
+import { MessagesWsModule } from './messages-ws/messages-ws.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { FriendshipsModule } from './friendships/friendships.module';
       envFilePath: '.env',
       validationSchema: envValidationSchema,
     }),
+    MessagesWsModule,
   ],
   controllers: [],
   providers: [],

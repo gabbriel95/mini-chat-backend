@@ -21,7 +21,7 @@ export class AuthController {
   }
 
   @Get()
-  @Auth(ROLES.ADMIN)
+  @Auth(ROLES.USER)
   async getUsers(@GetUser() user: User, @GetUser('email') email: string) {
     console.log(user);
     console.log(email);
