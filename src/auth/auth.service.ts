@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -13,31 +15,39 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger('AuthService');
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
-  async createUser(data: CreateUserDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    if (existingUser) {
-      throw new BadRequestException('Email is already registered');
-    }
+  async create(data: CreateUserDto) {
+    try {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: data.email },
+      });
+      if (existingUser) {
+        throw new BadRequestException('Email is already registered');
+      }
 
-    const user = await this.prisma.user.create({
-      data: {
-        ...data,
-        roles: data.roles || [ROLES.USER],
-        isActive: data.isActive ?? true,
-        password: bcrypt.hashSync(data.password, 10),
-        fullName: `${data.name} ${data.lastName}`,
-      },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...result } = user;
-    return result;
+      const user = await this.prisma.user.create({
+        data: {
+          ...data,
+          roles: data.roles || [ROLES.USER],
+          isActive: data.isActive ?? true,
+          password: bcrypt.hashSync(data.password, 10),
+          fullName: `${data.name} ${data.lastName}`,
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...result } = user;
+
+      return { ...result, token: this.getJwtToken({ id: user.id }) };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
   async login(loginUserDto: LoginUserDto) {
@@ -48,20 +58,14 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Credenciales incorrectas');
+      throw new UnauthorizedException('Credentials are not valid (id)');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales incorrectas');
+    if (!bcrypt.compareSync(password, user.password)) {
+      throw new UnauthorizedException('Credentials are not valid (password)');
     }
 
-    const token = this.getJwtToken({ id: user.id });
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...result } = user;
-
-    return { ...result, access_token: token };
+    return { ...user, token: this.getJwtToken({ id: user.id }) };
   }
 
   checkAuthStatus(user: User) {
@@ -70,6 +74,18 @@ export class AuthService {
 
   private getJwtToken(payload: JwtPayload) {
     return this.jwtService.sign(payload);
+  }
+
+  private handleDBExceptions(error: any): never {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (error.code === '23505') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      throw new BadRequestException(error.detail);
+    }
+    this.logger.error(error);
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs',
+    );
   }
 
   async getUsers() {
