@@ -15,6 +15,7 @@ export const GetUser = createParamDecorator(
       throw new InternalServerErrorException('User not found (request)');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...user } = userReq;
 
     return !data ? user : user[data];
