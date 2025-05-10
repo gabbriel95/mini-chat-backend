@@ -34,7 +34,7 @@ export class FriendshipsService {
       where: {
         userId1: lowerId,
         userId2: higherId,
-        status: FRIENDSHIPSTATUS.PENDING, // Solo se pueden actualizar solicitudes "pending"
+        //status: FRIENDSHIPSTATUS.PENDING, // Solo se pueden actualizar solicitudes "pending" / Y las blocked?
       },
     });
 
@@ -45,7 +45,10 @@ export class FriendshipsService {
     }
 
     // Validar que el usuario que acepta no sea el mismo que envió la solicitud
-    if (friendship.userId1 === dto.userId1) {
+    if (
+      friendship.userId1 === dto.userId1 &&
+      dto.status !== FRIENDSHIPSTATUS.BLOCKED
+    ) {
       throw new BadRequestException(
         'El usuario que envió la solicitud no puede responder la solicitud',
       );
