@@ -25,8 +25,9 @@ export class AuthController {
   @Get()
   @RoleProtected(ROLES.ADMIN)
   @UseGuards(AuthGuard(), UserRoleGuard)
-  async getUsers(@GetUser([]) user: User) {
+  async getUsers(@GetUser() user: User, @GetUser('email') email: string) {
     console.log(user);
+    console.log(email);
 
     return this.authService.getUsers();
   }

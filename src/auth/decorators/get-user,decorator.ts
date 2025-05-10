@@ -4,17 +4,19 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CustomRequest } from '../interfaces/custom-request.interfaces';
+import { User } from '@prisma/client';
 
-export const GetUser = createParamDecorator((data, ctx: ExecutionContext) => {
-  const req: CustomRequest = ctx.switchToHttp().getRequest();
-  const userReq = req.user;
+export const GetUser = createParamDecorator(
+  (data: keyof Omit<User, 'password'> | undefined, ctx: ExecutionContext) => {
+    const req: CustomRequest = ctx.switchToHttp().getRequest();
+    const userReq = req.user;
 
-  if (!userReq) {
-    throw new InternalServerErrorException('User not found (request)');
-  }
+    if (!userReq) {
+      throw new InternalServerErrorException('User not found (request)');
+    }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password: _, ...user } = userReq;
+    const { password: _, ...user } = userReq;
 
-  return user;
-});
+    return !data ? user : user[data];
+  },
+);
