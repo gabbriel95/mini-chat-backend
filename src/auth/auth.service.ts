@@ -22,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async create(data: CreateUserDto) {
+  async register(data: CreateUserDto) {
     try {
       const existingUser = await this.prisma.user.findUnique({
         where: { email: data.email },
