@@ -38,6 +38,7 @@ export class AuthService {
           isActive: data.isActive ?? true,
           password: bcrypt.hashSync(data.password, 10),
           fullName: `${data.name} ${data.lastName}`,
+          updatedBy: null,
         },
       });
 
@@ -86,9 +87,5 @@ export class AuthService {
     throw new InternalServerErrorException(
       'Unexpected error, check server logs',
     );
-  }
-
-  async getUsers() {
-    return await this.prisma.user.findMany();
   }
 }
