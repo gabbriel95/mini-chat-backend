@@ -1,40 +1,49 @@
 import {
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { Server as SocketIOServer } from 'socket.io';
+import { MessagesWsService } from './messages-ws.service';
+import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:3001' } }) // Configura el CORS según tu frontend
+@WebSocketGateway({ cors: true })
 export class MessagesWsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  @WebSocketServer()
-  server: SocketIOServer;
+  @WebSocketServer() wss: Server;
+
+  constructor(private readonly messagesWsService: MessagesWsService) {}
 
   handleConnection(client: Socket) {
-    console.log(`Cliente conectado: ${client.id}`);
+    //console.log('Cliente conectado', client.id);
+    this.messagesWsService.registerClient(client);
 
-    client.join('global_chat');
-    console.log(`Cliente ${client.id} se unió a la sala global.`);
+    this.wss.emit(
+      'clients-updated',
+      this.messagesWsService.getConnectedClients(),
+    );
   }
-
   handleDisconnect(client: Socket) {
-    console.log(`Cliente desconectado: ${client.id}`);
+    //console.log('Cliente desconectado', client.id);
+    this.messagesWsService.removeClient(client.id);
+    this.wss.emit(
+      'clients-updated',
+      this.messagesWsService.getConnectedClients(),
+    );
   }
 
   @SubscribeMessage('mensaje_global')
-  handleGlobalMessage(
-    client: Socket,
-    data: { userId: string; mensaje: string; fullName: string },
+  handleMensajeGlobal(
+    @MessageBody()
+    payload: {
+      userId: string;
+      mensaje: string;
+      fullName: string;
+    },
   ) {
-    this.server.to('global_chat').emit('mensaje_global', {
-      userId: data.userId,
-      mensaje: data.mensaje,
-      fullName: data.fullName,
-    });
+    this.wss.emit('mensaje_global', payload);
   }
 }

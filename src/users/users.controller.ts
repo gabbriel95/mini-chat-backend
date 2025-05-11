@@ -20,7 +20,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Auth(ROLES.ADMIN)
+  @Auth()
   async findAll(@Query('includeInactive') includeInactive: string) {
     const showAll = includeInactive === 'true';
     return await this.usersService.findAll(showAll);
