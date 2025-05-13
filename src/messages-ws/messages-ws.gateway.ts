@@ -1,4 +1,5 @@
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -16,19 +17,32 @@ export class MessagesWsGateway
   @WebSocketServer() wss: Server;
 
   constructor(private readonly messagesWsService: MessagesWsService) {}
-
   handleConnection(client: Socket) {
-    //console.log('Cliente conectado', client.id);
-    this.messagesWsService.registerClient(client);
-
     this.wss.emit(
       'clients-updated',
       this.messagesWsService.getConnectedClients(),
     );
   }
+
   handleDisconnect(client: Socket) {
-    //console.log('Cliente desconectado', client.id);
     this.messagesWsService.removeClient(client.id);
+    this.wss.emit(
+      'clients-updated',
+      this.messagesWsService.getConnectedClients(),
+    );
+  }
+
+  @SubscribeMessage('set-user')
+  handleSetUser(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { userId: string; fullName: string },
+  ) {
+    this.messagesWsService.registerClient(
+      client,
+      payload.userId,
+      payload.fullName,
+    );
     this.wss.emit(
       'clients-updated',
       this.messagesWsService.getConnectedClients(),

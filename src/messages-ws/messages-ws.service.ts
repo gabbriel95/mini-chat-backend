@@ -1,29 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { SubscribeMessage } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
-interface ConnectedClients {
-  [id: string]: Socket;
+interface ClientData {
+  socket: Socket;
+  userId: string;
+  fullName: string;
 }
 
 @Injectable()
 export class MessagesWsService {
-  private connectedClients: ConnectedClients = {};
+  private connectedClients: { [id: string]: ClientData } = {};
 
-  registerClient(client: Socket) {
-    this.connectedClients[client.id] = client;
+  registerClient(client: Socket, userId: string, fullName: string) {
+    this.connectedClients[client.id] = {
+      socket: client,
+      userId,
+      fullName,
+    };
   }
 
   removeClient(clientId: string) {
     delete this.connectedClients[clientId];
   }
 
-  getConnectedClients(): string[] {
-    return Object.keys(this.connectedClients);
-  }
-
-  @SubscribeMessage('message-from-client')
-  onMessageFromClient(client: Socket, payload: any) {
-    console.log(client.id, payload);
+  getConnectedClients(): { id: string; userId: string; fullName: string }[] {
+    return Object.entries(this.connectedClients).map(([id, data]) => ({
+      id,
+      userId: data.userId,
+      fullName: data.fullName,
+    }));
   }
 }
