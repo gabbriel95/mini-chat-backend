@@ -17,7 +17,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: 'http://localhost:3001', // el frontend de Next
+    origin: process.env.URL_FRONT,
     credentials: true,
   });
 
